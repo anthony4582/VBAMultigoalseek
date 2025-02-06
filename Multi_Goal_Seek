@@ -1,0 +1,56 @@
+Option Explicit
+Sub Multi_Goal_Seek()
+Dim TargetVal As Range, DesiredVal As Range, ChangeVal As Range, CVcheck As Range
+Dim CheckLen As Long, i As Long
+
+restart:
+With Application
+Set TargetVal = .InputBox(Title:="Select a range in a single row or column", _
+prompt:="Select your range which contains the ""Set Cell"" range", Default:=Range("t88:t114").Address, Type:=8)
+'no default option
+'prompt:="Select your range which contains the ""Set Cell"" range",, Type:=8)
+Set DesiredVal = .InputBox(Title:="Select a range in a single row or column", _
+prompt:="Select the range which the ""Set Cells"" will be changed to", Default:=Range("u88:u114").Address, Type:=8)
+'no default option
+'prompt:="Select the range which the ""Set Cells"" will be changed to",, Type:=8)
+Set ChangeVal = .InputBox(Title:="Select a range in a single row or column", _
+prompt:="Select the range of cells that will be changed", Default:=Range("N88:N114").Address, Type:=8)
+'no default option
+'prompt:="Select the range of cells that will be changed",, Type:=8)
+End With
+
+'Ensure that the changing cell range contains only values, no formulas allowed
+Set CVcheck = Intersect(ChangeVal, Union(Sheets(ChangeVal.Parent.Name).Cells.SpecialCells(xlBlanks), Sheets(ChangeVal.Parent.Name).Cells.SpecialCells(xlConstants)))
+If CVcheck Is Nothing Then
+MsgBox "Changing value range contains no blank cells or values" & vbNewLine & _
+"Goal seek only works if the cells to be changed are values, please ensure that this is the case", vbCritical
+Application.GoTo reference:=DesiredVal
+Exit Sub
+Else
+
+If CVcheck.Cells.Count <> DesiredVal.Cells.Count Then
+MsgBox "Changing value range contains formulas" & vbNewLine & _
+"Goal seek only works if the cells to be changed are values, please ensure that this is the case", vbCritical
+Application.GoTo reference:=DesiredVal
+Exit Sub
+End If
+End If
+
+'Ensure that the amount of cells is consistent
+If TargetVal.Cells.Count <> DesiredVal.Cells.Count Or TargetVal.Cells.Count <> ChangeVal.Cells.Count Then
+CheckLen = MsgBox("Ranges were different lengths, please press yes to re-enter", vbYesNo + vbCritical)
+If CheckLen = vbYes Then
+'If ranges are different sizes and user wants to redo then restart code
+GoTo restart
+Else
+Exit Sub
+End If
+End If
+
+' Loop through the goalseek method
+For i = 1 To 27
+TargetVal.Cells(i).GoalSeek Goal:=DesiredVal.Cells(i).Value, ChangingCell:=ChangeVal.Cells(i)
+Next i
+End Sub
+
+
